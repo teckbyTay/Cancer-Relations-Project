@@ -1,0 +1,154 @@
+---
+title: "Final Project"
+author: "jvogel, smillard, tsmith"
+date: "2022-11-05"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+options(dplyr.summarise.inform = FALSE)
+
+```
+
+#getting data
+
+```{r}
+dat<-esoph
+dat$part <- dat$ncases+dat$ncontrols
+
+```
+
+Creating data frame
+
+#make actual R code for data points
+
+```{r}
+
+age <- c("25-34", "35-44", "45-54", "55-64", "65-74", "75+")
+totalpar <- c(60, 202, 213, 242, 161, 44)
+
+df <- data.frame(age, totalpar)
+
+```
+
+
+
+Plotting bar graph of age and total count
+
+```{r}
+b<- barplot(height = totalpar,names.arg = age, xlab = "AGE", ylab = "Total Count" )
+b
+```
+
+
+```{r}
+
+#aggregate(dat$ncases, by=list(Category=dat$agegp), FUN=sum)
+
+
+dat.2<-aggregate(cbind(dat$ncases,dat$ncontrols) ~ dat$agegp, data = dat, FUN = sum, na.rm = TRUE)
+
+names(dat.2)<-c("Age","Cancer","NoCancer")
+
+dat.2
+
+#g<- ggplot(dat.2, aes(x = Age, y = totalpar)) +
+ # geom_bar(stat = "identity")
+#g
+
+
+c<-barplot(height = dat.2$Cancer ,names.arg = age, xlab = "AGE", ylab = "Total Cancer Cases" )
+d<-barplot(height = dat.2$NoCancer ,names.arg = age, xlab = "AGE", ylab = "Total Non Cancer" )
+c
+d
+
+
+```
+
+Cancer Proportations
+
+```{r}
+
+d1<- esoph %>%  group_by(agegp) %>%
+    summarise(count = n(), total_cases = sum(ncases), total_controls = sum(ncontrols),
+              percentage=total_cases*100/total_controls)
+
+
+ggplot(d1, aes(x=d1$agegp, y=d1$percentage,fill=d1$agegp)) +
+   geom_bar(stat="identity", position = "dodge") +
+   scale_fill_brewer(palette ="Set1")+
+   labs(x= 'Age Groups', y= 'Percentage Of Cancer Cases')+
+   guides(fill=guide_legend(title="Age Groups"))
+
+```
+
+
+
+
+
+
+
+#do tabacoo data frames
+
+
+
+
+
+#do alch
+
+
+
+```{r}
+#Data <- esoph(c(“ncases”, “alcgp”,”tobgp” )
+#relationship <- glm(ncases ~ factor(alcgp) + factor(tobgp) +factor(agegp), data = dat)
+#relationship
+#Call: glm(formula = ncases ~ factor(alcgp) + factor(tobgp), data = Data)
+
+
+model1 <- glm(cbind(ncases) ~ agegp + tobgp + alcgp,
+              data = esoph, family = gaussian())
+anova(model1)
+
+
+
+```
+
+
+```{r}
+
+ageg<- plot (dat$ncases,dat$agegp)
+
+alg <- plot(dat$alcgp,dat$ncases)
+
+tabg<- plot (dat$tobgp,dat$ncases)
+
+```
+
+
+#number of cancer cases are normally distributied
+
+```{r}
+
+p <- plot(dat$ncontrols)
+
+```
+
+
+Game Plan
+
+
+#number of cancer cases are normally distributed?
+
+#two way anova/3 way anova
+
+#tukey's test
+
+
+
+
