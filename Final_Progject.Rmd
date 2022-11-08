@@ -1,0 +1,94 @@
+---
+title: "Final Project"
+author: "jvogel, smillard, tsmith"
+date: "2022-11-05"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+options(dplyr.summarise.inform = FALSE)
+```
+
+Getting dataset from R:
+
+```{r}
+dat<- esoph
+```
+
+
+First we model our data in order to check if the residuals are normally distributed in order to conduct ANOVA. Out model will be 
+
+
+
+```{r}
+
+model <- aov(dat$ncases ~ dat$agegp+dat$alcgp+dat$tobgp, data = dat)
+
+#summary(model)
+
+#plot the model
+plot(model)
+
+#looking at histogram of residuals
+hist(model2$residuals, main = "Residuals Histogram")
+
+
+```
+  
+
+
+```{r}
+shapiro.test(model$residuals)
+```
+
+uhh ohh looks like data is not normually distributed.
+
+trying again but with probabily 
+
+```{r}
+esoph$percentage <- esoph$ncases / (esoph$ncontrols+esoph$ncases)
+
+model2 <- aov(percentage ~ agegp + tobgp + alcgp, data = esoph) #Linear model is created in order to apply anova test
+
+plot(model2$residuals)
+hist((model2$residuals))
+
+
+#formal test of normality
+
+shapiro.test(model2$residuals)
+
+#here p-value >.05 so we would not reject the null as there is strong evidence against rejecting the null.
+
+
+```
+
+
+
+
+
+
+Game Plan
+
+
+#number of cancer cases are normally distributed?
+
+
+
+
+
+
+
+#two way anova/3 way anova
+
+#tukey's test
+
+
+
+
