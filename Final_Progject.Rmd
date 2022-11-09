@@ -36,7 +36,7 @@ model <- aov(dat$ncases ~ dat$agegp+dat$alcgp+dat$tobgp, data = dat)
 plot(model)
 
 #looking at histogram of residuals
-hist(model2$residuals, main = "Residuals Histogram")
+hist(model$residuals, main = "Residuals Histogram")
 
 
 ```
@@ -47,9 +47,9 @@ hist(model2$residuals, main = "Residuals Histogram")
 shapiro.test(model$residuals)
 ```
 
-uhh ohh looks like data is not normually distributed.
+uhh ohh looks like data is not normally distributed.
 
-trying again but with probabily 
+trying again but with probability 
 
 ```{r}
 esoph$percentage <- esoph$ncases / (esoph$ncontrols+esoph$ncases)
@@ -86,6 +86,27 @@ Game Plan
 
 
 #two way anova/3 way anova
+
+First lets try the two way anova:
+
+```{r} 
+#We need our dependent variable (percent of cancer cases) and two independent variables (I picked tobacco and alcohol use) in their own data set.
+esoph.twoway <- esoph[ , c("alcgp", "tobgp", "percentage")]
+
+#Next I generate a frequency table (not sure if this is 100% needed)
+table(esoph.twoway$alcgp, esoph.twoway$tobgp)
+#the table shows that we have a relatively balanced design (the guides words not mine)
+
+#We create the anova test
+esoph.aov2way <- aov(percentage ~ alcgp + tobgp, data = esoph.twoway)
+#Then use summary to summarize the test
+summary(esoph.aov2way)
+
+#notes, I havent done any analysis on what the test shows, I also am not sure if we want to assume the variables interact at all
+#the model above is called an additive model hence the + sign, but if we think the variables interact we can use an * instead of the +
+
+```
+
 
 #tukey's test
 
