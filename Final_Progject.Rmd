@@ -22,9 +22,18 @@ dat<- esoph
 ```
 
 
+Basic Data Visualization (histograms ect.)
+```{r}
+
+```
+
+Prove Data is "clean", show no outliers, cooks distance test? 
+
+```{r}
+
+```
+
 First we model our data in order to check if the residuals are normally distributed in order to conduct ANOVA. Out model will be 
-
-
 
 ```{r}
 
@@ -118,8 +127,19 @@ summary(esoph.aov3way)
 #tukey's test
 
 ```{r}
-TukeyHSD(esoph.aov3way, which = "alcgp" )
+#perform tukey tests, and assign them to variables for plots later
+tukey.alcohol <- TukeyHSD(esoph.aov3way, which = "alcgp" )
+tukey.age <- TukeyHSD(esoph.aov3way, which = "agegp" )
 ```
+
 ```{r}
-TukeyHSD(esoph.aov3way, which = "agegp" )
+#results of tukey tests
+tukey.alcohol
+tukey.age
+```
+
+```{r}
+#Plot the tukey tests
+plot(tukey.age)
+plot(tukey.alcohol)
 ```
