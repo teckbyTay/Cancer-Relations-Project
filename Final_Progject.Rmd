@@ -107,9 +107,19 @@ summary(esoph.aov2way)
 
 ```
 
+```{r}
+esoph.aov3way <- aov(percentage ~ alcgp + tobgp + agegp, data = esoph)
+
+summary(esoph.aov3way)
+
+```
+
 
 #tukey's test
 
-
-
-
+```{r}
+TukeyHSD(esoph.aov3way, which = "alcgp" )
+```
+```{r}
+TukeyHSD(esoph.aov3way, which = "agegp" )
+```
