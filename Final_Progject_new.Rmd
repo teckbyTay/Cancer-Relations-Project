@@ -1,0 +1,158 @@
+---
+title: "Final Project"
+author: "jvogel, smillard, tsmith"
+date: "2022-11-05"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(outliers)
+options(dplyr.summarise.inform = FALSE)
+```
+
+Getting dataset from R:
+
+https://stat.ethz.ch/R-manual/R-devel/library/datasets/html/esoph.html
+
+```{r}
+dat <- esoph
+```
+
+Prove Data is "clean", show no outliers, cooks distance test? 
+
+```{r}
+#Here, we want to ensure that all of the data is clean. The techniques can help spot irregularities in the data.
+#head(dat)
+#summary(dat)
+#boxplot(dat)
+
+chisq.out.test(dat)
+
+#model <- lm(agegp ~ alcgp, data = outliers)
+
+#cooksD <- cooks.distance(model)
+
+#The data is already pretty clean and ready to use.
+```
+
+**First, we model our data in order to check if the residuals are normally distributed in order to conduct the ANOVA.**
+
+```{r}
+model <- aov(dat$ncases ~ dat$agegp+dat$alcgp+dat$tobgp, data = dat)
+
+#Summarizing the model
+summary(model)
+
+#Plotting the model
+plot(model)
+
+#Looking at histogram of residuals
+hist(model$residuals, main = "Residuals Histogram")
+```
+  
+
+
+```{r}
+shapiro.test(model$residuals)
+```
+
+**From this Shapiro-Wilk normality test, we can tell that the data is not normally distributed.**
+
+
+```{r}
+#Here, we try the Shapiro-Wilk test with probability.
+esoph$percentage <- esoph$ncases / (esoph$ncontrols+esoph$ncases)
+
+model2 <- aov(percentage ~ agegp + tobgp + alcgp, data = esoph) #A Linear model is created in order to apply ANOVA test.
+
+plot(model2$residuals)
+hist((model2$residuals))
+
+
+#This is the formal test of normality.
+shapiro.test(model2$residuals)
+```
+
+**We can conclude that by the p-value being > .05, we will not reject the null as there is strong evidence against rejecting the null. The histogram here reflects a normal distribution.**
+
+-----------------
+
+**In this next section, we perform a two-way and three-way ANOVA test which we used to determine whether or not there is a statistically significant difference between the means of our independent groups. Our independent groups are age, alcohol consumption, and tobacco consumption. Each of our independent groups have several levels: age group and consumption amounts.**
+
+**To follow up with our ANOVA test, we performed a Tukey's test on Alcohol consumption and age group to find which pairs are significant.**
+
+----------------
+
+**First lets try the two-way ANOVA:**
+
+```{r} 
+#We need our dependent variable (percent of cancer cases) and two independent variables (tobacco and alcohol use) in their own data set.
+esoph.twoway <- esoph[ , c("alcgp", "tobgp", "percentage")]
+```
+
+
+```{r}
+#Next, a frequency table is generated.
+table(esoph.twoway$alcgp, esoph.twoway$tobgp)
+
+#Here, the table shows that we have a relatively balanced design.
+```
+
+
+```{r}
+#We create the anova test
+esoph.aov2way <- aov(percentage ~ alcgp + tobgp, data = esoph.twoway)
+
+#Then use summary to summarize the test
+summary(esoph.aov2way)
+
+#The model above is called an additive model hence the + sign, but if we think the variables interact we can use an * instead of the +
+```
+
+
+```{r}
+#The three-way anova has two independent variables and one dependent variable.
+esoph.aov3way <- aov(percentage ~ alcgp + tobgp + agegp, data = esoph)
+
+#Here we use summary to summarize the test
+summary(esoph.aov3way)
+```
+
+
+**Here, the Tukey's test is being performed.**
+
+```{r}
+#Here, we perform a Tukey's test, and assign them to variables for plots later.
+tukey.alcohol <- TukeyHSD(esoph.aov3way, which = "alcgp" )
+tukey.age <- TukeyHSD(esoph.aov3way, which = "agegp" )
+```
+
+
+
+```{r}
+#Here, we display the results of Tukey's tests.
+tukey.age
+tukey.alcohol
+```
+**Using both CI and p-values, the Tukey's test results for the "age" variable reflects that the pairs that are significant are (p-value < .05): (45-54) & (25-34); (55-64) & (25-34); (65-74) & (25-34); (75+) & (25-34); (45-54) & (35-44); (55-64) & (35-44); (65-74) & (35-44); (75+) & (35-44)**
+
+**Using both CI and p-values, the Tukey's test results for the "alcohol consumption" variable reflects that the pairs that are significant are (p-value <. 05): (80-119) & (0-39) g/day; (120+) & (0-39) g/day; (120+) & (40-79) g/day; (120+) & (80-119) g/day** 
+
+
+```{r}
+#Here, we reflect the plot for the Tukey's test on the "age" variable.
+plot(tukey.age)
+```
+
+
+```{r}
+#Here, we reflect the plot for the Tukey's test on the "alcohol consumption" variable.
+plot(tukey.alcohol)
+```
