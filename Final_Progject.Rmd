@@ -12,134 +12,99 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(ggplot2)
 library(dplyr)
+library(outliers)
 options(dplyr.summarise.inform = FALSE)
 ```
 
 Getting dataset from R:
 
-```{r}
-dat<- esoph
-```
+https://stat.ethz.ch/R-manual/R-devel/library/datasets/html/esoph.html
 
-
-Basic Data Visualization (histograms ect.)
-```{r}
-
-```
-
-Prove Data is "clean", show no outliers, cooks distance test? 
+Setting up our data
 
 ```{r}
+dat <- esoph
 
-```
+#adding column to data of cancer percentages
 
-First we model our data in order to check if the residuals are normally distributed in order to conduct ANOVA. Out model will be 
-
-```{r}
-
-model <- aov(dat$ncases ~ dat$agegp+dat$alcgp+dat$tobgp, data = dat)
-
-#summary(model)
-
-#plot the model
-plot(model)
-
-#looking at histogram of residuals
-hist(model$residuals, main = "Residuals Histogram")
-
-
-```
-  
-
-
-```{r}
-shapiro.test(model$residuals)
-```
-
-uhh ohh looks like data is not normally distributed.
-
-trying again but with probability 
-
-```{r}
 esoph$percentage <- esoph$ncases / (esoph$ncontrols+esoph$ncases)
 
-model2 <- aov(percentage ~ agegp + tobgp + alcgp, data = esoph) #Linear model is created in order to apply anova test
+```
 
+Prove Data is "clean", show no outliers, using cooks distance test.
+
+```{r}
+
+#Here, we want to ensure that all of the data is clean. The techniques can help spot irregularities in the data.
+
+#summary(dat)
+boxplot(dat$agegp,dat$alcgp, dat$tobgp)
+
+model <- lm(percentage ~ agegp+ alcgp+tobgp, data = dat)
+summary(model)
+
+
+#The data is already pretty clean and ready to use.
+```
+
+
+
+```{r}
+#Here, we try the Shapiro-Wilk test with probability.
+
+model2 <- aov(percentage ~ agegp + tobgp + alcgp, data = esoph) #A Linear model is created in order to apply ANOVA test.
 plot(model2$residuals)
 hist((model2$residuals))
-
-
-#formal test of normality
-
+#This is the formal test of normality.
 shapiro.test(model2$residuals)
-
-#here p-value >.05 so we would not reject the null as there is strong evidence against rejecting the null.
-
-
 ```
 
+**We can conclude that by the p-value being > .05,  there is is not enough statistical evidence to reject the null hypotheses that the data is normally distributed. The histogram here reflects a normal distribution.**
+
+-----------------
+
+**In this next section, we perform a  three-way ANOVA test which we used to determine whether or not there is a statistically significant difference between the means of our independent groups. Our independent groups are age, alcohol consumption, and tobacco consumption. Each of our independent groups have several levels: age group and consumption amounts.**
 
 
 
+----------------
 
 
-Game Plan
-
-
-#number of cancer cases are normally distributed?
-
-
-
-
-
-
-
-#two way anova/3 way anova
-
-First lets try the two way anova:
-
-```{r} 
-#We need our dependent variable (percent of cancer cases) and two independent variables (I picked tobacco and alcohol use) in their own data set.
-esoph.twoway <- esoph[ , c("alcgp", "tobgp", "percentage")]
-
-#Next I generate a frequency table (not sure if this is 100% needed)
-table(esoph.twoway$alcgp, esoph.twoway$tobgp)
-#the table shows that we have a relatively balanced design (the guides words not mine)
-
-#We create the anova test
-esoph.aov2way <- aov(percentage ~ alcgp + tobgp, data = esoph.twoway)
-#Then use summary to summarize the test
-summary(esoph.aov2way)
-
-#notes, I havent done any analysis on what the test shows, I also am not sure if we want to assume the variables interact at all
-#the model above is called an additive model hence the + sign, but if we think the variables interact we can use an * instead of the +
-
-```
 
 ```{r}
+#The three-way anova has three independent variables and one dependent variable.
 esoph.aov3way <- aov(percentage ~ alcgp + tobgp + agegp, data = esoph)
-
-summary(esoph.aov3way)
-
+#Here we use the ANOVA
+anova(esoph.aov3way)
+#summary(esoph.aov3way)
 ```
 
+**We see from the p-values that there is enough statistical evidence to show that we reject the null hypothesis that there is no difference in means for alcohol consumption and age group. But there is not enough evidence to reject the null hypothesis that there is no difference in means for tabacoo consumption**
 
-#tukey's test
+**To follow up with our ANOVA test, we performed a Tukey's test on our significant factors Alcohol consumption and age group to find which pairs of levels are significant.**
+
+**Here, the Tukey's test is being performed.**
 
 ```{r}
-#perform tukey tests, and assign them to variables for plots later
+#Here, we perform a Tukey's test, on the alcohol
 tukey.alcohol <- TukeyHSD(esoph.aov3way, which = "alcgp" )
-tukey.age <- TukeyHSD(esoph.aov3way, which = "agegp" )
-```
-
-```{r}
-#results of tukey tests
 tukey.alcohol
-tukey.age
+
+
+#Here, we plot the CI for the Tukey's test on the "age" variable.
+plot(tukey.age)
 ```
+**Using both CI and p-values, the Tukey's test results for the "alcohol consumption" variable reflects that the pairs that are significant are (p-value <. 05): (80-119) & (0-39) g/day; (120+) & (0-39) g/day; (120+) & (40-79) g/day; (120+) & (80-119) g/day** 
 
 ```{r}
-#Plot the tukey tests
-plot(tukey.age)
+#Here, we display the results of Tukey's tests.
+
+tukey.age <- TukeyHSD(esoph.aov3way, which = "agegp" )
+tukey.age
+
+#Here, we reflect the plot for the Tukey's test on the "alcohol consumption" variable.
 plot(tukey.alcohol)
+
 ```
+
+**Using both CI and p-values, the Tukey's test results for the "age" variable reflects that the pairs that are significant are (p-value < .05): (45-54) & (25-34); (55-64) & (25-34); (65-74) & (25-34); (75+) & (25-34); (45-54) & (35-44); (55-64) & (35-44); (65-74) & (35-44); (75+) & (35-44)**
